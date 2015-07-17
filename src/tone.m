@@ -1,4 +1,6 @@
 %% tone: generate a tone of a certain frequency
-function signal = tone(f, duration)
-    t = [0:(1/8e3):duration];
-    signal = sin(2*pi*f*t);
+function signal = tone(t, t_start, duration, f)
+    interval = (t >= t_start & t < t_start + duration);
+
+    signal = zeros(size(t));
+    signal(interval) = sin(2 * pi * f * t(interval));
