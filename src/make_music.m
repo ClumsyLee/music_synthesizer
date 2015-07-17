@@ -1,5 +1,5 @@
 %% make_music: Use certain tone generator to make music.
-function music = make_music(generator, f_sample)
+function [t, music] = make_music(generator, f_sample)
     beat = 0.5;
     t_total = 5;
     f = [349.23, 392, 440, 466.16, 523.25, 587.33, 659.25, 698.46];
