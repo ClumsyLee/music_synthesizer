@@ -3,14 +3,14 @@ function amp = tone_shape(t, duration)
     % Parameters.
     t_impulse = 0.1;
     t_decay = 0.06;
-    t_interval = 0.1;
+    t_stay = 0.5 * duration;
     peak_amp = 1;
     stay_amp = 0.8;
     fade_coefficient = 20;
 
     impulse_end = t_impulse;
     decay_end = impulse_end + t_decay;
-    stay_end = duration - t_interval;
+    stay_end = decay_end + t_stay;
 
     % Stages.
     impulse = (t >= 0 & t < impulse_end);
