@@ -102,7 +102,30 @@ function amp = tone_shape(t, duration)
 
 ### 1.3 升高 & 降低音阶
 
+对于简单的音调变换，可以直接更改输入给 `sound` 的 `FS` 参数，即改变播放时的采样频率。
 
+```matlab
+%% trivial_change_octave.m
+f_sample = 8e3;
+[t, music] = make_music(@refined_tone, f_sample);
+sound(music, 2 * f_sample);  % One octave higher.
+pause(2.5);
+sound(music, 0.5 * f_sample);  % One octave lower.
+```
+
+要升高半个音阶，则应该先使用 `rat` 函数找到半个音阶（2^(1/12)）的有理近似，再使用 `resample` 函数进行重采样。代码如下：
+
+```matlab
+%% resample_higher_octave.m
+f_sample = 8e3;
+[Q, P] = rat(2^(1/12), 0.0000001);  % Find the rational approximation.
+[t, music] = make_music(@refined_tone, f_sample);
+sound(resample(music, P, Q), f_sample);
+```
+
+其中 [Q, P] 在实验中得到的实际值是 [3118, 2943]。
+
+需要注意的是，得到的三段音乐都有变速。
 
 ## 用傅里叶级数分析音乐
 
