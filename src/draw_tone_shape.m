@@ -1,0 +1,11 @@
+t = linspace(0, 1.2, 1.2*8e3+1);
+subplot(311);
+plot(t, tone_shape(t, 0.25));
+ylabel('1/2 beat');
+subplot(312);
+plot(t, tone_shape(t, 0.5));
+ylabel('1 beat');
+subplot(313);
+plot(t, tone_shape(t, 1));
+xlabel('time/s');
+ylabel('2 beats');
