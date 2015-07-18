@@ -1,16 +1,16 @@
 %% tone_shape: Volumn at a certain time point.
 function amp = tone_shape(t, duration)
     % Parameters.
-    t_impulse = 0.1;
-    t_decay = 0.06;
-    t_stay = 0.5 * duration;
+    impulse_ratio = 0.15;
+    decay_ratio = 0.15;
+    stay_ratio = 0.5;
     peak_amp = 1;
     stay_amp = 0.8;
-    fade_coefficient = 20;
+    fade_coefficient = 7;
 
-    impulse_end = t_impulse;
-    decay_end = impulse_end + t_decay;
-    stay_end = decay_end + t_stay;
+    impulse_end = impulse_ratio * duration;
+    decay_end = impulse_end + decay_ratio * duration;
+    stay_end = decay_end + stay_ratio * duration;
 
     % Stages.
     impulse = (t >= 0 & t < impulse_end);
@@ -23,4 +23,4 @@ function amp = tone_shape(t, duration)
     amp(impulse) = linspace(0, peak_amp, sum(impulse));
     amp(decay) = linspace(peak_amp, stay_amp, sum(decay));
     amp(stay) = stay_amp;
-    amp(fade) = stay_amp * exp(fade_coefficient * (stay_end - t(fade)));
+    amp(fade) = stay_amp * exp(fade_coefficient * (stay_end - t(fade)) / duration);
