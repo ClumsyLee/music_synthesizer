@@ -52,6 +52,24 @@ function play_music(generator)
 然后使用 `play_music(@trivial_tone)` 来播放音乐，确实可以听到”啪“的杂声。
 
 
+### 1.2 用包络修正乐音
+
+```matlab
+
+```
+```matlab
+
+```
+```matlab
+
+```
+
+### 1.3 升高 & 降低音阶
+
+```matlab
+[Q, P] = rat(2^(1/12), 0.0000001)
+```
+
 ## 用傅里叶级数分析音乐
 
 ## 基于傅里叶级数的合成音乐
