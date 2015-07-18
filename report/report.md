@@ -39,6 +39,8 @@ function [t, music] = make_music(generator, f_sample)
         music = music + generator(t, t_now, duration, tones(tone_num));
         t_now = t_now + duration;
     end
+
+    music = music / max(music);  % Make sure signal <= 1.
 ```
 
 ```matlab
