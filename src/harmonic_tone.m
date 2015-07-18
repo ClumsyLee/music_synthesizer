@@ -1,4 +1,4 @@
-%% tone: generate a tone of a certain frequency
+%% harmonic_tone: generate a harmonic refined tone of a certain frequency
 function signal = harmonic_tone(t, t_start, duration, f)
     interval = (t >= t_start);
 

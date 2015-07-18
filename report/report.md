@@ -11,7 +11,7 @@
 所以，我们采用如下的结构。`*_tone` 函数在某一时刻产生一特定频率的乐音，`make_music` 函数使用传入的乐音生成函数生成《东方红》，`play_music` 函数调用 `make_music` 生成并播放音乐。各个函数代码如下：
 
 ```matlab
-%% trivial_tone: generate a tone of a certain frequency
+%% trivial_tone: Generate a tone of a certain frequency
 function signal = trivial_tone(t, t_start, duration, f)
     interval = (t >= t_start & t < t_start + duration);
 
@@ -94,6 +94,17 @@ function amp = tone_shape(t, duration)
     amp(stay) = stay_amp;
     amp(fade) = stay_amp * exp(fade_coefficient * ...
                                (stay_end - t(fade)) / duration);
+```
+
+乐音生成函数：
+
+```matlab
+%% refined_tone: Generate a tone of a certain frequency with refined shape
+function signal = refined_tone(t, t_start, duration, f)
+    interval = (t >= t_start);
+
+    signal = zeros(size(t));
+    signal = tone_shape(t - t_start, duration) .* sin(2 * pi * f * t);
 ```
 
 修正后音乐的波形：

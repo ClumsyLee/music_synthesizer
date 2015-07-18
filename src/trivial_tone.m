@@ -1,4 +1,4 @@
-%% trivial_tone: generate a tone of a certain frequency
+%% trivial_tone: Generate a tone of a certain frequency
 function signal = trivial_tone(t, t_start, duration, f)
     interval = (t >= t_start & t < t_start + duration);
 
