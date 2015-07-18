@@ -23,4 +23,5 @@ function amp = tone_shape(t, duration)
     amp(impulse) = linspace(0, peak_amp, sum(impulse));
     amp(decay) = linspace(peak_amp, stay_amp, sum(decay));
     amp(stay) = stay_amp;
-    amp(fade) = stay_amp * exp(fade_coefficient * (stay_end - t(fade)) / duration);
+    amp(fade) = stay_amp * exp(fade_coefficient * ...
+                               (stay_end - t(fade)) / duration);
