@@ -140,6 +140,23 @@ sound(resample(music, P, Q), f_sample);
 
 需要注意的是，得到的三段音乐都有变速。
 
+### 1.4 增加谐波分量
+
+使用教材中的谐波分量幅度，代码如下
+
+```matlab
+%% harmonic_tone: generate a harmonic refined tone of a certain frequency
+function signal = harmonic_tone(t, t_start, duration, f)
+    interval = (t >= t_start);
+
+    shape = [1, 0.2, 0.3] * sin(2 * pi * f * [1:3]' * t);
+    signal = tone_shape(t - t_start, duration) .* shape;
+```
+
+其中计算合成信号时使用的是矩阵运算。
+
+合成出的音乐确实要有“厚度”一些，听起来也确实有些像风琴。
+
 ## 用傅里叶级数分析音乐
 
 ## 基于傅里叶级数的合成音乐
