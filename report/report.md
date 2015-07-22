@@ -165,7 +165,38 @@ function signal = harmonic_tone(t, t_start, duration, f)
 
 ### 2.1 播放 `fmt.wav`
 
-### 2.2 预处理 `readwave` => `wave2proc`
+听起来确实要比刚刚的合成音乐真实不少 = =…
+
+需要注意的是，在 Matlab R2014b 上调用 `wavread` 时得到了一个警告：
+
+    Warning: WAVREAD will be removed in a future release. Use AUDIOREAD
+    instead.
+
+所以改为使用 `audioread` 播放音乐：
+
+```matlab
+sound(audioread('../../resource/fmt.wav'))
+```
+
+### 2.2 预处理 `realwave` => `wave2proc`
+
+从 `realwave` 的时域波形中可以看出，其大约经历了 10 个完整的周期。故为了去除非线性谐波和噪声，我们可以取 10 个周期的均值。
+
+然而注意到 `realwave` 包含 243 个采样点，不是 10 的倍数，故先对其进行 10 倍频，取得周期均值之后将波形重复十次，再进行十分频。
+
+代码如下：
+
+```matlab
+%% preprocess: Remove noises from realwave
+function wave2proc = preprocess(realwave, cycle)
+    cycle_wave = mean(reshape(resample(realwave, cycle, 1), ...
+                              [length(realwave), cycle])')';
+    wave2proc = resample(repmat(cycle_wave, [cycle, 1]), ...
+                         1, cycle);
+```
+
+如图所示，处理得到的信号与 `wave2proc` 相差无几：
+![wave2proc compare](gen_wave2proc.png)
 
 ### 2.3 分析基频 & 谐波
 
