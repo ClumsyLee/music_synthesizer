@@ -1,0 +1,6 @@
+%% preprocess: Remove noices from realwave
+function wave2proc = preprocess(realwave, cycle)
+    cycle_wave = mean(reshape(resample(realwave, cycle, 1), ...
+                              [length(realwave), cycle])')';
+    wave2proc = resample(repmat(cycle_wave, [cycle, 1]), ...
+                         1, cycle);
