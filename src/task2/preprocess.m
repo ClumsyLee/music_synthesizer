@@ -1,4 +1,4 @@
-%% preprocess: Remove noices from realwave
+%% preprocess: Remove noises from realwave
 function wave2proc = preprocess(realwave, cycle)
     cycle_wave = mean(reshape(resample(realwave, cycle, 1), ...
                               [length(realwave), cycle])')';
