@@ -248,6 +248,37 @@ avg(avg < 3.5) = 0;
 
 可以看到，音调起始点都被很好地识别了出来。
 
+我们首先来确定这段音乐的节拍。从图上可以看出，这段音乐中一拍的经历的采样点数大概是 3000 ~ 4500。
+
+为了得到更精确的数字，我们可以求在不同的节拍下，周期采样匹配结果得到的均值的最大值。这是因为，如果周期与节拍对应，大多数匹配点都会落在同一个序列中，故均值较大。代码如下：
+
+```matlab
+%% period_avg: Calculate the avg in a period of time
+function avg = period_avg(x, period)
+    row = period;
+    col = floor(length(x) / row);
+    avg = mean(reshape(x(1:row*col), [row, col])')';
+```
+
+```matlab
+from = 3000;
+to = 4500;
+max_mean = zeros(1, to - from + 1);
+for k = 3000:4500
+    max_mean(k - from + 1) = max(period_avg(avg, k));
+end
+```
+
+我们通过 `max` 取得谐振峰：
+
+```matlab
+[value, index] = max(max_mean);
+```
+
+可以得到 `index = 822`, 如图：
+
+![find period](find_period.png)
+
 
 ## 3. 基于傅里叶级数的合成音乐
 
