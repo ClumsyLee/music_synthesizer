@@ -202,6 +202,53 @@ function wave2proc = preprocess(realwave, cycle)
 
 ### 2.4 自动分析乐曲的音调和节拍
 
+为了自动标记出每个音调的起始时间，我们先来分析时域波形幅度的特点。
+
+在起始点前 700ms ~ 200ms 处，之前音调的音量已经基本消失，并基本保持不变。我们把这一段称为 **谷段**，如图所示：
+
+![valley](valley_part.png)
+
+在起始点前 200ms 到起始点处，新的音调音量迅速爬升，然后取得一个 **峰值**。我们把这一段称为 **坡段**，如图所示：
+
+![rising](rising_part.png)
+
+于是我们想到，可以通过 `峰值 / 谷段均值` 来识别出起始点。其中，去除坡段是为了使匹配处的比值更大，去除坡段对匹配精度的影响。
+
+首先，我们需要计算谷段的平均值：
+
+```matlab
+%% moving_avg: Shifted moving average.
+function avg = moving_avg(x, lag_from, lag_to)
+    lag = lag_from - lag_to + 1;
+    shifted = [zeros(lag_to, 1); x(1:length(x)-lag_to)];
+    avg = movavg(shifted, lag, lag, 0);
+```
+
+然后计算峰值与其的比值，并截去过大的值
+
+```matlab
+avg = abs_wave ./ moving_avg(abs_wave, 700, 200);
+avg(avg > 10) = 10;
+avg(isnan(avg)) = 0;  % Caused by 0/0
+```
+
+结果如下图所示。其中中图为未去除 0 ~ 200ms 坡段的结果，下图为去除后的结果。可以看到，去除坡段确实提升了匹配精度。
+
+![match result](match_beginning.png)
+
+然后根据图像，我们设置一个阈值，去除比值过小的点。这里选取阈值为 3.5。
+
+```matlab
+avg(avg < 3.5) = 0;
+```
+
+得到结果如下：
+
+![match](match.png)
+
+可以看到，音调起始点都被很好地识别了出来。
+
+
 ## 3. 基于傅里叶级数的合成音乐
 
 ### 3.1 使用 2.3 的傅里叶级数完成 1.4
