@@ -1,5 +1,5 @@
 %% analyze_freq: Analyze the freq of a signal.
-function [baseband, band_wights] = analyze_freq(sig, f_sample)
+function [baseband, band_wights, tone] = analyze_freq(sig, f_sample)
     error_ratio = 0.01;
 
     f = abs(fft(sig));
@@ -30,6 +30,9 @@ function [baseband, band_wights] = analyze_freq(sig, f_sample)
 
     %% Calculate baseband.
     baseband = (baseband - 1) / length(sig) * f_sample;
+
+    %% Match tone.
+    tone = match_tone(baseband);
 end
 
 %% max_around: Find maximum around a index.

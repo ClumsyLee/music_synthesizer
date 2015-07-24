@@ -200,6 +200,130 @@ function wave2proc = preprocess(realwave, cycle)
 
 ### 2.3 分析基频 & 谐波
 
+为了分析这段音乐的基频，我们很容易想到使用快速傅里叶变换来计算。
+
+```matlab
+len = length(wave2proc);
+f = [0:len-1] / len * 8000;
+plot(f, abs(fft(wave2proc)))
+xlabel 'f / Hz'
+ylabel Amp
+```
+
+![wave2proc's FFT](wave2proc_fft.png)
+
+我们成功得到了这段音乐的频谱。然而可以发现，我们得到的频谱分辨率不是很高。由采样定理可知，时域采样频率决定了频域宽度；反过来，由对偶性可知，时域宽度决定了频域采样间隔。故我们可以通过重复时域信号的方式增加频域分辨率：
+
+```matlab
+for n = 1:4
+    w = repmat(wave2proc, [2^(n-1),1]);
+    len = length(w);
+    f = [0:len-1] / len * 8000;
+    subplot(220 + n);
+    plot(f, abs(fft(w)));
+    xlabel 'f / Hz'
+    ylabel Amp
+    title(strcat('x', num2str(2^(n-1))))
+end
+```
+
+![improvement](repeat_improve.png)
+
+可以看到，频域的分辨率确实提高了，其包络也越来越趋近于冲激函数。
+
+为了分析基频和谐波分量，我们进行如下操作：
+
+1. 根据对称性取出频谱的前一半；
+2. 去除幅度小于阈值的点，这里选取为 0.1 倍最大值；
+3. 找到最大峰，暂设为基频；
+4. 依次查看最大峰频率的 1/2, 1/3, 1/4 处附近的频谱，若有较大幅度则说明原基频为高次谐波分量，将较小的频率作为新的基频；
+5. 在基频的 2, 3, 4 倍频率附近寻找高次谐波分量。
+
+代码如下：
+
+```matlab
+%% analyze_freq: Analyze the freq of a signal.
+function [baseband, band_wights, tone] = analyze_freq(sig, f_sample)
+    error_ratio = 0.01;
+
+    f = abs(fft(sig));
+    f = f(1:ceil(length(f) / 2));  % Only use the lower half.
+    f(f < 0.1 * max(f)) = 0;  % Truncate insignificant bands.
+
+    %% Only care about the most significant band.
+    [max_wight, max_band] = max(f);
+
+    %% Find base band.
+    baseband = max_band;
+    base_wight = max_wight;
+    for ratio = [2, 3, 4]
+        band = (max_band - 1) / ratio + 1;
+        [maximum, index] = max_around(f, band, error_ratio);
+        if maximum > 0.4 * max_wight
+            baseband = index;
+            base_wight = maximum;
+        end
+    end
+
+    %% Calculate wights.
+    band_wights = [base_wight];
+    for ratio = [2, 3, 4]
+        band_wights(ratio) = max_around(f, ratio * baseband, error_ratio);
+    end
+    band_wights = band_wights / base_wight;
+
+    %% Calculate baseband.
+    baseband = (baseband - 1) / length(sig) * f_sample;
+
+    %% Match tone.
+    tone = match_tone(baseband);
+end
+
+%% max_around: Find maximum around a index.
+function [maximum, index] = max_around(x, index, error_ratio)
+    from = ceil(index *  (1 - error_ratio));
+    to   = floor(index * (1 + error_ratio));
+    [maximum, index] = max(x(from:to));
+    index = index + from - 1;
+end
+```
+
+`match_tone` 函数负责找到某一频率最接近的音调：
+
+```matlab
+%% match_tone: Find the closest tone to a certain frequency.
+function tone = match_tone(f)
+    load tones
+    [value, index] = min(abs(tone_freqs - f));
+    tone = tone_names{index};
+```
+
+其中 `tones.mat` 中包含了一下两个变量：
+
+* `tone_names`: 各音调的名字
+* `tone_freqs`: 各音调的频率
+
+调用函数：
+
+```matlab
+[baseband, band_wights, tone] = analyze_freq(repmat(wave2proc, [64, 1]), 8000)
+
+% baseband =
+%
+%   329.2181
+%
+%
+% band_wights =
+%
+%     1.0000    1.4572    0.9587    1.0999
+%
+% tone =
+%
+% e1
+```
+
+故这段信号的基频是 329.22 Hz, 是 e1 音。
+
 ### 2.4 自动分析乐曲的音调和节拍
 
 为了自动标记出每个音调的起始时间，我们先来分析时域波形幅度的特点。
@@ -264,7 +388,6 @@ for k = t
 end
 avg(avg > 0) = 1;
 ```
-
 
 ![beats](beats.png)
 
