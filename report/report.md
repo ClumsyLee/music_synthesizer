@@ -204,7 +204,7 @@ function wave2proc = preprocess(realwave, cycle)
 
 为了自动标记出每个音调的起始时间，我们先来分析时域波形幅度的特点。
 
-在起始点前 700ms ~ 200ms 处，之前音调的音量已经基本消失，并基本保持不变。我们把这一段称为 **谷段**，如图所示：
+在起始点前 700 ~ 200ms 处，之前音调的音量已经基本消失，并基本保持不变。我们把这一段称为 **谷段**，如图所示：
 
 ![valley](valley_part.png)
 
@@ -227,6 +227,7 @@ function avg = moving_avg(x, lag_from, lag_to)
 然后计算峰值与其的比值，并截去过大的值
 
 ```matlab
+abs_wave = abs(wave);
 avg = abs_wave ./ moving_avg(abs_wave, 700, 200);
 avg(avg > 10) = 10;
 avg(isnan(avg)) = 0;  % Caused by 0/0
@@ -236,56 +237,38 @@ avg(isnan(avg)) = 0;  % Caused by 0/0
 
 ![match result](match_beginning.png)
 
-然后根据图像，我们设置一个阈值，去除比值过小的点。这里选取阈值为 3.5。
+然后根据图像，我们设置一个阈值，同时去除以下点：
+* 比值过小的点（这里选取阈值为 3.5）
+* 峰值过小的点（这里选取阈值为 0.1）
+* 坡段上升速度过小的点（这里选取 50 ~ 0ms 与 100 ~ 50ms 的比值，阈值取 1.3）
 
 ```matlab
-avg(avg < 3.5) = 0;
+rising0 = moving_avg(abs_wave, 100, 50);
+rising1 = moving_avg(abs_wave, 50, 0);
+avg(avg < 3.5 | abs_wave < 0.1 | 1.3 * rising0 > rising1) = 0;
 ```
 
 得到结果如下：
 
 ![match](match.png)
 
-可以看到，音调起始点都被很好地识别了出来。
-
-我们首先来确定这段音乐的节拍。从图上可以看出，这段音乐中一拍的经历的采样点数大概是 3000 ~ 4500。
-
-为了得到更精确的数字，我们可以求在不同的节拍下，周期采样匹配结果得到的均值的最大值。这是因为，如果周期与节拍对应，大多数匹配点都会落在同一个序列中，故均值较大。代码如下：
+合并相邻点并归一化，并与原波形一同显示：
 
 ```matlab
-%% period_avg: Calculate the avg in a period of time
-function avg = period_avg(x, period)
-    row = period;
-    col = floor(length(x) / row);
-    avg = mean(reshape(x(1:row*col), [row, col])')';
-```
-
-```matlab
-from = 3000;
-to = 4500;
-max_mean = zeros(1, to - from + 1);
-for k = 3000:4500
-    max_mean(k - from + 1) = max(period_avg(avg, k));
+[value, index] = sort(avg, 'descend');
+t = 1:length(avg);
+for k = t
+    if avg(index(k)) > 0
+        avg(t > index(k) - 500 & t < index(k) + 500 & t ~= index(k)) = 0;
+    end
 end
+avg(avg > 0) = 1;
 ```
 
-我们通过 `max` 取得谐振峰：
-
-```matlab
-[value, index] = max(max_mean);
-```
-
-可以得到 `index = 822`, 如图：
-
-![find period](find_period.png)
-
-故节拍为 3821 个采样周期。如图所示：
-
-![match with bests](match_with_beats.png)
-
-可以看到，尽管结尾处有些偏差，节拍的总体拟合度是很好的。我们对最后 7 个音调重新拟合，得到节拍为 4195 个采样周期。同时，去掉结尾处的错误匹配，去除混叠过于严重的音节和空音节，加入两个半音节。在原波形上画出修正后的音节划分：
 
 ![beats](beats.png)
+
+可以看到，音调起始点都被很好地识别了出来。
 
 
 ## 3. 基于傅里叶级数的合成音乐
