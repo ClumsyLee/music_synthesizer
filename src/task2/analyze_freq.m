@@ -12,25 +12,30 @@ function [baseband, band_wights] = analyze_freq(sig, f_sample)
     %% Find base band.
     baseband = max_band;
     base_wight = max_wight;
-    for ratio = [2, 3]
+    for ratio = [2, 3, 4]
         band = (max_band - 1) / ratio + 1;
         [maximum, index] = max_around(f, band, error_ratio);
-        if maximum > 0.5 * max_wight
+        if maximum > 0.4 * max_wight
             baseband = index;
             base_wight = maximum;
         end
     end
 
     %% Calculate wights.
-    band_wights = [base_wight, ...
-                   max_around(f, 2 * baseband, error_ratio), ...
-                   max_around(f, 3 * baseband, error_ratio)] / base_wight;
+    band_wights = [base_wight];
+    for ratio = [2, 3, 4]
+        band_wights(ratio) = max_around(f, ratio * baseband, error_ratio);
+    end
+    band_wights = band_wights / base_wight;
 
+    %% Calculate baseband.
     baseband = (baseband - 1) / length(sig) * f_sample;
 end
 
 %% max_around: Find maximum around a index.
 function [maximum, index] = max_around(x, index, error_ratio)
-    [maximum, index] = max(x(ceil(index *  (1 - error_ratio)): ...
-                             floor(index * (1 + error_ratio))));
+    from = ceil(index *  (1 - error_ratio));
+    to   = floor(index * (1 + error_ratio));
+    [maximum, index] = max(x(from:to));
+    index = index + from - 1;
 end
