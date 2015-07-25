@@ -459,6 +459,27 @@ report = table([from, to, to - from], round((to - from) / 0.239) * 0.5, ...
 
 ### 3.1 使用 2.3 的傅里叶级数完成 1.4
 
+使用 2.3 中算出的傅里叶级数：
+
+    1.0000    1.4572    0.9587    1.0999
+
+同时，为了能够模仿出吉他的声音，我们对音调的包络进行调整，使其尽可能像 `fmt.wav` 中的波形包络。
+
+```matlab
+    impulse_ratio = 0.01;
+    decay_ratio = 0.1;
+    stay_ratio = 0.1;
+    peak_amp = 1;
+    stay_amp = 0.5;
+    fade_coefficient = 2.5;
+```
+
+得到合区的波形如下：
+
+![guitar song](guitar_song.png)
+
+听起来确实有种弦乐器的感觉，但是还不是特别像吉他。
+
 ### 3.2 演奏一首东方红
 
 ### 3.3 用图形界面封装程序
