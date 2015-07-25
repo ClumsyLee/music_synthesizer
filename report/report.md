@@ -453,25 +453,29 @@ report = table([from, to, to - from], round((to - from) / 0.239) * 0.5, ...
 
 *表格的结构借鉴了韩神的设计。*
 
-我们便得到了这段音乐中每个音调的信息。
+我们便得到了这段音乐中每个音调的信息。为了方便以后使用，我们将相关数据存在 `guitar.mat` 中：
+
+```matlab
+
+```
 
 ## 3. 基于傅里叶级数的合成音乐
 
 ### 3.1 使用 2.3 的傅里叶级数完成 1.4
 
-使用 2.3 中算出的傅里叶级数：
+使用 2.3 中算出的傅里叶级数作为各次谐波分量的幅度。
 
     1.0000    1.4572    0.9587    1.0999
 
 同时，为了能够模仿出吉他的声音，我们对音调的包络进行调整，使其尽可能像 `fmt.wav` 中的波形包络。
 
 ```matlab
-    impulse_ratio = 0.01;
-    decay_ratio = 0.1;
-    stay_ratio = 0.1;
-    peak_amp = 1;
-    stay_amp = 0.5;
-    fade_coefficient = 2.5;
+impulse_ratio = 0.01;
+decay_ratio = 0.1;
+stay_ratio = 0.1;
+peak_amp = 1;
+stay_amp = 0.5;
+fade_coefficient = 2.5;
 ```
 
 得到合区的波形如下：
@@ -482,4 +486,31 @@ report = table([from, to, to - from], round((to - from) / 0.239) * 0.5, ...
 
 ### 3.2 演奏一首东方红
 
+为了能够为每个音找到合适的谐波分量，我们先在基频中找到频率与其最相近的一个音，用它的谐波分量作为该音的谐波分量：
+
+```matlab
+%% refined_guitar_tone: generate a refined guitar tone of a certain frequency
+function signal = refined_guitar_tone(t, t_start, duration, f)
+    interval = (t >= t_start);
+
+    load guitar
+    [value, index] = min(abs(baseband - f));  % Find the closest tone.
+
+    wave = band_wights(index, :) * sin(2 * pi * f * [1:4]' * t);
+    signal = guitar_tone_shape(t - t_start, duration) .* wave;
+```
+
+```matlab
+play_music(@refined_guitar_tone);
+```
+
+得到的音乐与 3.1 中的相比更加厚重了，确实要更接近吉他一些。
+
+不过，还是能听出来合成出的音乐和 `fmt.wav` 中的有较大区别。主要原因应该还在于包络的选取。
+
 ### 3.3 用图形界面封装程序
+
+暂缺
+
+
+## 实验总结
